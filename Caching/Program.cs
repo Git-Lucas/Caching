@@ -21,16 +21,15 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 string nameEndpoint = "GetWeatherForecast";
-app.MapGet("/weatherforecast", async ([FromServices]IMemoryCache memoryCache, IWeatherForecastData weatherForecastData) =>
+app.MapGet("/api/weatherforecast", async ([FromServices]IMemoryCache memoryCache, IWeatherForecastData weatherForecastData) =>
 {
-    WeatherForecast[]? forecast = await memoryCache.GetOrCreateAsync(
-        nameEndpoint,
-        cacheEntry =>
-        {
-            cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(3);
-            return weatherForecastData.GetWeatherForecastsAsync();
-        });
-    
+    WeatherForecast[]? forecast = memoryCache.Get<WeatherForecast[]>(nameEndpoint);
+
+    if (forecast is null)
+    {
+        forecast = await weatherForecastData.GetWeatherForecastsAsync();
+        memoryCache.Set(nameEndpoint, forecast, TimeSpan.FromSeconds(3));
+    }
 
     return forecast;
 })
