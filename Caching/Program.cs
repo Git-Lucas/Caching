@@ -37,10 +37,7 @@ app.MapGet("/weatherforecast", ([FromServices]IMemoryCache memoryCache) =>
             ))
             .ToArray();
 
-        MemoryCacheEntryOptions cacheEntryOptions = new MemoryCacheEntryOptions()
-            .SetSlidingExpiration(TimeSpan.FromSeconds(5));
-
-        memoryCache.Set(nameEndpoint, forecast, cacheEntryOptions);
+        memoryCache.Set(nameEndpoint, forecast, TimeSpan.FromSeconds(5));
     }
 
     return forecast;
