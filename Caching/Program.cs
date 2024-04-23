@@ -24,21 +24,25 @@ var summaries = new[]
 };
 
 string nameEndpoint = "GetWeatherForecast";
-app.MapGet("/weatherforecast", ([FromServices]IMemoryCache memoryCache) =>
+app.MapGet("/weatherforecast", async ([FromServices]IMemoryCache memoryCache) =>
 {
-    if (!memoryCache.TryGetValue(nameEndpoint, out WeatherForecast[]? forecast))
-    {
-        forecast = Enumerable.Range(1, 5).Select(index =>
-            new WeatherForecast
-            (
-                DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                Random.Shared.Next(-20, 55),
-                summaries[Random.Shared.Next(summaries.Length)]
-            ))
-            .ToArray();
-
-        memoryCache.Set(nameEndpoint, forecast, TimeSpan.FromSeconds(5));
-    }
+    WeatherForecast[]? forecast = await memoryCache.GetOrCreateAsync(
+        nameEndpoint,
+        cacheEntry =>
+        {
+            cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(3);
+            return Task.FromResult(Enumerable
+                                   .Range(1, 5)
+                                   .Select(index =>
+                                   new WeatherForecast
+                                   (
+                                       DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                                       Random.Shared.Next(-20, 55),
+                                       summaries[Random.Shared.Next(summaries.Length)]
+                                   ))
+                                   .ToArray());
+        });
+    
 
     return forecast;
 })
