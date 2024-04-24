@@ -1,13 +1,21 @@
+using Caching.Cache;
 using Caching.Data;
 using Caching.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
+using System.Text;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddMemoryCache();
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnectionString");
+    options.InstanceName = "MyInstance";
+});
 builder.Services.AddScoped<IWeatherForecastData, WeatherForecastData>();
 
 var app = builder.Build();
@@ -20,22 +28,30 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-string nameEndpoint = "GetWeatherForecast";
-app.MapGet("/api/weatherforecast", async ([FromServices]IMemoryCache memoryCache, IWeatherForecastData weatherForecastData) =>
+app.MapGet("/api/weatherforecast", async ([FromServices] IDistributedCache distributedCache, IWeatherForecastData weatherForecastData) =>
 {
-    WeatherForecast[]? forecast = await memoryCache.GetOrCreateAsync(
-       nameEndpoint,
-       cacheEntry =>
-       {
-           cacheEntry.SetSlidingExpiration(TimeSpan.FromSeconds(3));
-           cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10);
-           return weatherForecastData.GetWeatherForecastsAsync();
-       });
+    byte[]? forecastBytes = await distributedCache.GetAsync(CacheKeys.GetWeatherForecast);
 
+    if (forecastBytes != null)
+    {
+        string forecastJson = Encoding.UTF8.GetString(forecastBytes);
+        return forecastJson;
+    }
 
-    return forecast;
+    WeatherForecast[] forecastsFromDatabase = await weatherForecastData.GetWeatherForecastsAsync();
+    string jsonForecastsFromDatabase = JsonSerializer.Serialize(forecastsFromDatabase, 
+                                                                new JsonSerializerOptions() { WriteIndented = true });
+    byte[] encodedforecastsFromDatabase = Encoding.UTF8.GetBytes(jsonForecastsFromDatabase);
+
+    DistributedCacheEntryOptions options = new DistributedCacheEntryOptions()
+        .SetSlidingExpiration(TimeSpan.FromSeconds(3))
+        .SetAbsoluteExpiration(TimeSpan.FromSeconds(10));
+
+    await distributedCache.SetAsync(CacheKeys.GetWeatherForecast, encodedforecastsFromDatabase, options);
+
+    return jsonForecastsFromDatabase;
 })
-.WithName(nameEndpoint)
+.WithName("GetWeatherForecast")
 .WithOpenApi();
 
 app.Run();
