@@ -1,3 +1,4 @@
+using Caching.Cache;
 using Caching.Data;
 using Caching.Entities;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<MyMemoryCache>();
 builder.Services.AddScoped<IWeatherForecastData, WeatherForecastData>();
 
 var app = builder.Build();
@@ -21,14 +22,15 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 string nameEndpoint = "GetWeatherForecast";
-app.MapGet("/api/weatherforecast", async ([FromServices]IMemoryCache memoryCache, IWeatherForecastData weatherForecastData) =>
+app.MapGet("/api/weatherforecast", async ([FromServices]MyMemoryCache memoryCache, IWeatherForecastData weatherForecastData) =>
 {
-    WeatherForecast[]? forecast = await memoryCache.GetOrCreateAsync(
+    WeatherForecast[]? forecast = await memoryCache.Cache.GetOrCreateAsync(
        nameEndpoint,
        cacheEntry =>
        {
            cacheEntry.SetSlidingExpiration(TimeSpan.FromSeconds(3));
            cacheEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10);
+           cacheEntry.SetSize(1024);
            return weatherForecastData.GetWeatherForecastsAsync();
        });
 
