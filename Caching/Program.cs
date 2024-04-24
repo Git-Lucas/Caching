@@ -34,6 +34,7 @@ app.MapGet("/api/weatherforecast", async ([FromServices]MyMemoryCache memoryCach
            return weatherForecastData.GetWeatherForecastsAsync();
        });
 
+    memoryCache.Cache.Remove(nameEndpoint);
 
     return forecast;
 })
