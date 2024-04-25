@@ -1,8 +1,8 @@
 ﻿using Caching.Entities;
 
-namespace Caching.Data;
+namespace Caching.Repositories;
 
-public interface IWeatherForecastData
+public interface IWeatherForecastRepository
 {
     Task<WeatherForecast[]> GetWeatherForecastsAsync();
 }
