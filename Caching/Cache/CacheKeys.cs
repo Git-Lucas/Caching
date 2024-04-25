@@ -2,5 +2,5 @@
 
 public static class CacheKeys
 {
-    public const string GetWeatherForecast = "GetWeatherForecast";
+    public const string GetWeatherForecasts = "WeatherForecasts";
 }

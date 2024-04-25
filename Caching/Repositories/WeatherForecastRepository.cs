@@ -1,14 +1,14 @@
 ﻿using Caching.Entities;
 
-namespace Caching.Data;
+namespace Caching.Repositories;
 
-public class WeatherForecastData : IWeatherForecastData
+public class WeatherForecastRepository : IWeatherForecastRepository
 {
     private readonly string[] _summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
 
     public async Task<WeatherForecast[]> GetWeatherForecastsAsync()
     {
-        return Enumerable.Range(1, 5).Select(index =>
+        WeatherForecast[] forecasts = Enumerable.Range(1, 20).Select(index =>
             new WeatherForecast
             (
                 DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
@@ -16,5 +16,9 @@ public class WeatherForecastData : IWeatherForecastData
                 _summaries[Random.Shared.Next(_summaries.Length)]
             ))
             .ToArray();
+
+        await Task.Delay(2000);
+
+        return forecasts;
     }
 }
