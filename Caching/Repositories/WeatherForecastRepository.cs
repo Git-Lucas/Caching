@@ -6,7 +6,16 @@ public class WeatherForecastRepository : IWeatherForecastRepository
 {
     private readonly string[] _summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
 
-    public async Task<WeatherForecast[]> GetWeatherForecastsAsync(int skip, int take)
+    public async Task<int> CreateAsync(WeatherForecast weatherForecast)
+    {
+        int weatherForecastId = new Random().Next(101, 1000);
+        
+        await Task.Delay(1000);
+
+        return weatherForecastId;
+    }
+
+    public async Task<WeatherForecast[]> GetPagedAsync(int skip, int take)
     {
         take = ValidateTake(take);
 
