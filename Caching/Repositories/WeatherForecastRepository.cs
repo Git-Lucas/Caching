@@ -8,6 +8,8 @@ public class WeatherForecastRepository : IWeatherForecastRepository
 
     public async Task<WeatherForecast[]> GetWeatherForecastsAsync(int skip, int take)
     {
+        take = ValidateTake(take);
+
         WeatherForecast[] forecasts = Enumerable.Range(1, take).Select(index =>
             new WeatherForecast
             (
@@ -20,5 +22,15 @@ public class WeatherForecastRepository : IWeatherForecastRepository
         await Task.Delay(2000);
 
         return forecasts;
+    }
+
+    private int ValidateTake(int take)
+    {
+        if (take < 0 || take > 100)
+        {
+            return 100;
+        }
+
+        return take;
     }
 }

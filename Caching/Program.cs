@@ -1,4 +1,5 @@
 using Caching;
+using Caching.DTOs;
 using Caching.Entities;
 using Caching.Repositories;
 using Microsoft.AspNetCore.Mvc;
@@ -33,11 +34,17 @@ app.UseHttpsRedirection();
 
 app.MapGet("/api/weatherforecast", 
            async ([FromServices] IWeatherForecastRepository weatherForecastRepository, 
-                         [FromQuery] int skip = 0, 
+                         [FromQuery] int skip = 0,
                          [FromQuery] int take = 5) =>
 {
     WeatherForecast[] weatherForecasts = await weatherForecastRepository.GetWeatherForecastsAsync(skip, take);
-    return weatherForecasts;
+
+    GetPagedResponse<WeatherForecast> weatherForecastsPaginated = new(100, 
+                                                                      skip, 
+                                                                      take, 
+                                                                      weatherForecasts);
+
+    return weatherForecastsPaginated;
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
