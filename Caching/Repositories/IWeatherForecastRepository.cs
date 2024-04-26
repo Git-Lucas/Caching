@@ -4,5 +4,6 @@ namespace Caching.Repositories;
 
 public interface IWeatherForecastRepository
 {
-    Task<WeatherForecast[]> GetWeatherForecastsAsync();
+    Task<int> CreateAsync(WeatherForecast weatherForecast);
+    Task<WeatherForecast[]> GetPagedAsync(int skip, int take);
 }
