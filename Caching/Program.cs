@@ -31,9 +31,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapGet("/api/weatherforecast", async ([FromServices] IWeatherForecastRepository weatherForecastRepository) =>
+app.MapGet("/api/weatherforecast", 
+           async ([FromServices] IWeatherForecastRepository weatherForecastRepository, 
+                         [FromQuery] int skip = 0, 
+                         [FromQuery] int take = 5) =>
 {
-    WeatherForecast[] weatherForecasts = await weatherForecastRepository.GetWeatherForecastsAsync();
+    WeatherForecast[] weatherForecasts = await weatherForecastRepository.GetWeatherForecastsAsync(skip, take);
     return weatherForecasts;
 })
 .WithName("GetWeatherForecast")

@@ -13,22 +13,21 @@ public class CachedWeatherForecastRepository(
     private readonly IWeatherForecastRepository _decorated = decorated;
     private readonly IDistributedCache _distributedCache = distributedCache;
 
-    public async Task<WeatherForecast[]> GetWeatherForecastsAsync()
+    public async Task<WeatherForecast[]> GetWeatherForecastsAsync(int skip, int take)
     {
-        string? forecastsJson = await _distributedCache.GetStringAsync(CacheKeys.GetWeatherForecasts);
+        string? forecastsJson = await _distributedCache.GetStringAsync(CacheKeys.GetWeatherForecasts(skip, take));
 
         WeatherForecast[] weatherForecasts;
         if (string.IsNullOrEmpty(forecastsJson))
         {
-            weatherForecasts = await _decorated.GetWeatherForecastsAsync();
+            weatherForecasts = await _decorated.GetWeatherForecastsAsync(skip, take);
 
             DistributedCacheEntryOptions options = new DistributedCacheEntryOptions()
-                .SetSlidingExpiration(TimeSpan.FromSeconds(3))
-                .SetAbsoluteExpiration(TimeSpan.FromSeconds(10));
+                .SetAbsoluteExpiration(TimeSpan.FromDays(1));
 
-            await _distributedCache.SetStringAsync(CacheKeys.GetWeatherForecasts, 
-                                                  JsonSerializer.Serialize(weatherForecasts),
-                                                  options);
+            await _distributedCache.SetStringAsync(CacheKeys.GetWeatherForecasts(skip, take), 
+                                                   JsonSerializer.Serialize(weatherForecasts),
+                                                   options);
 
             return weatherForecasts;
         }

@@ -6,9 +6,9 @@ public class WeatherForecastRepository : IWeatherForecastRepository
 {
     private readonly string[] _summaries = ["Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"];
 
-    public async Task<WeatherForecast[]> GetWeatherForecastsAsync()
+    public async Task<WeatherForecast[]> GetWeatherForecastsAsync(int skip, int take)
     {
-        WeatherForecast[] forecasts = Enumerable.Range(1, 20).Select(index =>
+        WeatherForecast[] forecasts = Enumerable.Range(1, take).Select(index =>
             new WeatherForecast
             (
                 DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
